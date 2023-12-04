@@ -5,4 +5,4 @@ from .parser import Parser
 from .stoken import SToken
 from .symtab import *
 
-__all__=sorted(['scanner','symtab','linenumlist','monad', 'parser','stoken'],key=str.lower)
+__all__=sorted(['scanner','symtab','linenumlist','monad', 'parser','stoken','fstruct'],key=str.lower)

@@ -1,0 +1,123 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_OUTPUT_MODE	u-ctags	/u-ctags or e-ctags/
+!_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
+!_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
+!_TAG_PROGRAM_URL	https://ctags.io/	/official site/
+!_TAG_PROGRAM_VERSION	0.0.0	//
+CmdToken	stoken.py	/^class CmdToken(Protocol):$/;"	c
+CommentToken	stoken.py	/^class CommentToken(SToken):$/;"	c
+EOFToken	stoken.py	/^class EOFToken(EOLToken):$/;"	c
+EOLToken	stoken.py	/^class EOLToken(SToken):$/;"	c
+ElementToken	stoken.py	/^class ElementToken:$/;"	c
+Empty	monad.py	/^class Empty(Maybe):$/;"	c
+IncludeToken	stoken.py	/^class IncludeToken:$/;"	c
+LibToken	stoken.py	/^class LibToken:$/;"	c
+LineNumList	linenumlist.py	/^class LineNumList:$/;"	c
+LineNumNode	linenumlist.py	/^class LineNumNode:$/;"	c
+Maybe	monad.py	/^class Maybe(Generic[T]):$/;"	c
+OptionToken	stoken.py	/^class OptionToken:$/;"	c
+Parser	parser.py	/^class Parser:$/;"	c
+SToken	stoken.py	/^class SToken:$/;"	c
+Scanner	scanner.py	/^class Scanner:$/;"	c
+SubcktToken	stoken.py	/^class SubcktToken:$/;"	c
+SymTab	symtab.py	/^class SymTab:$/;"	c
+SymTabNode	symtab.py	/^class SymTabNode:$/;"	c
+T	ftools.py	/^T=TypeVar('T')$/;"	v
+T	monad.py	/^T=TypeVar('T')$/;"	v
+__all__	__init__.py	/^__all__=sorted(['scanner','symtab','linenumlist','monad', 'parser','stoken','fstruct'],key=str.l/;"	v
+__bool__	monad.py	/^	def __bool__(self):$/;"	m	class:Maybe
+__contains__	symtab.py	/^	def __contains__(self,tk:SToken):$/;"	m	class:SymTabNode
+__del__	fstruct.py	/^	def __del__(self):$/;"	m	class:fstruct
+__del__	linenumlist.py	/^	def __del__(self):$/;"	m	class:LineNumList
+__del__	monad.py	/^	def __del__(self):$/;"	m	class:Maybe
+__del__	symtab.py	/^	def __del__(self):$/;"	m	class:SymTab
+__del__	symtab.py	/^	def __del__(self):$/;"	m	class:SymTabNode
+__eq__	stoken.py	/^	def __eq__(self, __value: 'SToken|str') -> bool:$/;"	m	class:SToken
+__getattr__	monad.py	/^	def __getattr__(self,name):$/;"	m	class:Maybe
+__init__	fstruct.py	/^	def __init__(self,fname,pth="", ignore=False):$/;"	m	class:fstruct
+__init__	linenumlist.py	/^	def __init__(self) -> None:$/;"	m	class:LineNumList
+__init__	linenumlist.py	/^	def __init__(self, ln) -> None:$/;"	m	class:LineNumNode
+__init__	monad.py	/^	def __init__(self):$/;"	m	class:Empty
+__init__	monad.py	/^	def __init__(self, val, valid=True):$/;"	m	class:Maybe
+__init__	parser.py	/^	def __init__(self,f:str):$/;"	m	class:Parser
+__init__	scanner.py	/^	def __init__(self,f):$/;"	m	class:Scanner
+__init__	stoken.py	/^	def __init__(self, ln:LineNumNode):$/;"	m	class:EOLToken
+__init__	stoken.py	/^	def __init__(self, ln:LineNumNode=LineNumNode(-1)):$/;"	m	class:EOFToken
+__init__	stoken.py	/^	def __init__(self,name:SToken):$/;"	m	class:LibToken
+__init__	stoken.py	/^	def __init__(self,name:SToken,parser:tokenizer|None=None) -> None:$/;"	m	class:ElementToken
+__init__	stoken.py	/^	def __init__(self,name:SToken,parser:tokenizer|None=None):$/;"	m	class:OptionToken
+__init__	stoken.py	/^	def __init__(self,name:SToken,ports:list[SToken],parser:tokenizer|None=None):$/;"	m	class:SubcktToken
+__init__	stoken.py	/^	def __init__(self,name:str,val:str,ln:LineNumNode=LineNumNode(-1)):$/;"	m	class:SToken
+__init__	stoken.py	/^	def __init__(self,parser:tokenizer):$/;"	m	class:IncludeToken
+__init__	stoken.py	/^	def __init__(self,val,ln:LineNumNode):$/;"	m	class:CommentToken
+__init__	symtab.py	/^	def __init__(self) -> None:$/;"	m	class:SymTab
+__init__	symtab.py	/^	def __init__(self, cnt:SToken,xst:int,xn:int) -> None:$/;"	m	class:SymTabNode
+__iter__	scanner.py	/^	def __iter__(self):$/;"	m	class:Scanner
+__next__	scanner.py	/^	def __next__(self):$/;"	m	class:Scanner
+__next__	stoken.py	/^	def __next__(self) -> SToken:$/;"	m	class:tokenizer
+__repr__	linenumlist.py	/^	def __repr__(self):$/;"	m	class:LineNumNode
+__repr__	monad.py	/^	def __repr__(self):$/;"	m	class:Maybe
+__repr__	stoken.py	/^	def __repr__(self):$/;"	m	class:CommentToken
+__repr__	stoken.py	/^	def __repr__(self):$/;"	m	class:EOFToken
+__repr__	stoken.py	/^	def __repr__(self):$/;"	m	class:EOLToken
+__repr__	stoken.py	/^	def __repr__(self):$/;"	m	class:SToken
+__repr__	symtab.py	/^	def __repr__(self) -> str:$/;"	m	class:SymTabNode
+__repr__	symtab.py	/^	def __repr__(self):$/;"	m	class:SymTab
+add	symtab.py	/^	def add(self,new_tk:SToken,xst:int,xnn:int):$/;"	m	class:SymTabNode
+add_comp	stoken.py	/^	def add_comp(self,comp:ElementToken):$/;"	m	class:SubcktToken
+add_params	stoken.py	/^	def add_params(self,params:list['OptionToken']):$/;"	m	class:SubcktToken
+bind	monad.py	/^	def bind(self,f:Callable) -> 'Maybe':$/;"	m	class:Maybe
+continue_parse	stoken.py	/^	def continue_parse(self, p:tokenizer) -> None:$/;"	m	class:LibToken
+continue_parse	stoken.py	/^	def continue_parse(self,p:tokenizer) -> None:$/;"	m	class:OptionToken
+continue_parse	stoken.py	/^	def continue_parse(self,p:tokenizer) -> None:$/;"	m	class:SubcktToken
+continue_parse	stoken.py	/^	def continue_parse(self,p:tokenizer):$/;"	m	class:ElementToken
+curr_idx	scanner.py	/^	curr_idx=0$/;"	v	class:Scanner
+edit	symtab.py	/^	def edit(self,name:str,val:str):$/;"	m	class:SymTab
+edit_value	symtab.py	/^	def edit_value(self,name:str,val:str):$/;"	m	class:SymTabNode
+enter	symtab.py	/^	def enter(self,tk:SToken)-> None:$/;"	m	class:SymTab
+files	fstruct.py	/^files=[]$/;"	v
+find_dependencies	fstruct.py	/^	def find_dependencies(self):$/;"	m	class:fstruct
+find_next_occurance	scanner.py	/^def find_next_occurance(arr, char: str,ignore_first:bool=False):$/;"	f
+fstruct	fstruct.py	/^class fstruct:$/;"	c
+generate_line_splits	stoken.py	/^def generate_line_splits(*inp:list[SToken]):$/;"	f
+get_all_files	parser.py	/^	def get_all_files(self) -> 'list[str]':$/;"	m	class:Parser
+get_files	fstruct.py	/^	def get_files():$/;"	m	class:fstruct
+get_next_token	scanner.py	/^	def get_next_token(self):$/;"	m	class:Scanner
+get_parent	symtab.py	/^	def get_parent(self,tk:SToken) -> 'Maybe[SymTabNode]':$/;"	m	class:SymTabNode
+get_st	fstruct.py	/^	def get_st():$/;"	m	class:fstruct
+get_symbol	parser.py	/^	def get_symbol(self,name:str):$/;"	m	class:Parser
+get_symtab	parser.py	/^	def get_symtab(self):$/;"	m	class:Parser
+get_tok	symtab.py	/^	def get_tok(self,name:str):$/;"	m	class:SymTabNode
+head	ftools.py	/^def head(l:list[T]) -> T:$/;"	f
+insert	scanner.py	/^def insert(iter,fill):$/;"	f
+len_of_line	scanner.py	/^	def len_of_line(self):$/;"	m	class:Scanner
+len_of_line	stoken.py	/^	def len_of_line(self) -> int:$/;"	m	class:tokenizer
+line_no	scanner.py	/^	line_no=0$/;"	v	class:Scanner
+list_lens	ftools.py	/^def list_lens(l:list[T],attr:str) -> list[Any]:$/;"	f
+lnl	scanner.py	/^lnl=LineNumList()$/;"	v
+parse	fstruct.py	/^	def parse(self):$/;"	m	class:fstruct
+parse	parser.py	/^	def parse(self):$/;"	m	class:Parser
+peek	scanner.py	/^	def peek(self) -> SToken:$/;"	m	class:Scanner
+peek	stoken.py	/^	def peek(self) -> SToken:$/;"	m	class:tokenizer
+print	fstruct.py	/^	def print(self):$/;"	m	class:fstruct
+print	parser.py	/^	def print(self):$/;"	m	class:Parser
+remove_lc_markers	scanner.py	/^def remove_lc_markers(arr:list) ->list:$/;"	f
+replace_val	parser.py	/^	def replace_val(self,name:str,val:str):$/;"	m	class:Parser
+search	symtab.py	/^	def search(self,name:str):$/;"	m	class:SymTab
+st	fstruct.py	/^st=SymTab()$/;"	v
+tail	ftools.py	/^def tail(l:list[T]) -> list[T]:$/;"	f
+tokenizer	stoken.py	/^class tokenizer(Protocol):$/;"	c
+update	linenumlist.py	/^	def update(self, ln):$/;"	m	class:LineNumList
+write	fstruct.py	/^	def write(self):$/;"	m	class:fstruct
+write	stoken.py	/^	def write(self,f)->None: ...$/;"	m	class:CmdToken
+write	stoken.py	/^	def write(self,f):$/;"	m	class:CommentToken
+write	stoken.py	/^	def write(self,f):$/;"	m	class:EOFToken
+write	stoken.py	/^	def write(self,f):$/;"	m	class:EOLToken
+write	stoken.py	/^	def write(self,f):$/;"	m	class:ElementToken
+write	stoken.py	/^	def write(self,f):$/;"	m	class:IncludeToken
+write	stoken.py	/^	def write(self,f):$/;"	m	class:LibToken
+write	stoken.py	/^	def write(self,f):$/;"	m	class:OptionToken
+write	stoken.py	/^	def write(self,f):$/;"	m	class:SToken
+write	stoken.py	/^	def write(self,f):$/;"	m	class:SubcktToken
+write_all	parser.py	/^	def write_all(self):$/;"	m	class:Parser

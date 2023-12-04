@@ -13,13 +13,15 @@ class Scanner:
 	next_is_EOL:bool
 	done:bool
 	curr_line_start:int
+	in_iter:bool
 	def __init__(self,f):
+		self.in_iter=False
 		self.done=False
 		self.fname=path.abspath(f)
 		with open(f,'r') as _fp:
 			lines=_fp.read().splitlines(False)
 			tkBuff=[s.split(' ') for s in insert(lines,'\n')]
-		self.tkBuff=sum(tkBuff,[])
+		self.tkBuff=[tk for tk in sum(tkBuff,[]) if tk!=""]
 		self.next_is_EOL=False
 		self.next_is_EOF=False
 		self.curr_line_start=0
@@ -27,10 +29,14 @@ class Scanner:
 	def __iter__(self):
 		self.curr_idx=0
 		self.line_no=0
+		self.in_iter=True
 		return self
 	def __next__(self):
 		if self.done:
-			raise StopIteration
+			if self.in_iter:
+				raise StopIteration
+			else:
+				return EOFToken()
 		return self.get_next_token()
 
 	def get_next_token(self):
@@ -46,19 +52,15 @@ class Scanner:
 				self.line_no+=1
 				self.curr_line_start=self.curr_idx
 				return EOLToken(lnl.tail)
-		comment_line=False
 		lnl.update(self.line_no)
 		idx_delta=1
 		res=self.tkBuff[self.curr_idx]
-		# if self.tkBuff[self.curr_idx].startswith("*"):
 		if res.startswith("*"):
-			comment_line=True
 			idx_delta=find_next_occurance(self.tkBuff[self.curr_idx:],'\n')
 			res=" ".join(self.tkBuff[self.curr_idx:self.curr_idx+idx_delta+1]).strip()
 			self.line_no+=1
 			self.curr_idx+=idx_delta
 			return CommentToken(res,lnl.tail)
-			# self.next_is_EOL=True
 		elif '"' in res or "'" in res:
 			quote_char={True:'"',False:"'"}['"' in res]
 			idx_delta=find_next_occurance(self.tkBuff[self.curr_idx:],quote_char, ignore_first=True)
@@ -66,25 +68,13 @@ class Scanner:
 			res=" ".join(ctx)
 			self.curr_idx+=idx_delta+1
 			idx_delta=0
-		# if self.tkBuff[self.curr_idx].endswith('\n'):
-		# if self.tkBuff[self.curr_idx]=='\n':
-			# self.line_no+=1
-			# if self.curr_idx >= len(self.tkBuff)-1:
-				# self.next_is_EOF=True
 		if self.curr_idx < len(self.tkBuff)-2 and self.tkBuff[self.curr_idx+2].startswith('+'):
 			idx_delta+=2
-				#res +=self.tkBuff[self.curr_idx+2]
-			# else:
-				# self.next_is_EOL=True
-				# self.curr_line_start=self.curr_idx+idx_delta+1
 		self.curr_idx+=idx_delta
-		# if self.curr_idx >= len(self.tkBuff)-1:
-			# self.next_is_EOF=True
 		if "=" in res:
 			strs=res.strip().split('=')
 			var=strs[0]
 			val='='.join(strs[1:])
-			#var,val=res.strip().split('=')
 		else:
 			var=res.strip()
 			val=""
