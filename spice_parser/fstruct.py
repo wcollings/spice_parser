@@ -2,6 +2,11 @@ from .stoken import *
 from .scanner import Scanner
 from .symtab import SymTab
 from os import path, stat
+from functools import reduce
+
+def rem(s:str,old:str) -> str:
+	rep=lambda s,r:str.replace(s,r,"")
+	return reduce(rep,[s]+list(old))
 
 files=[]
 st=SymTab()
@@ -13,6 +18,7 @@ class fstruct:
 	scn:Scanner
 	ignore:bool
 	parsed:bool
+	dependencies:list
 	""" If this is a text file, we shouldn't try to parse it or write it like a spice file"""
 	def __init__(self,fname,pth="", ignore=False):
 		if fname.startswith('"') and fname.endswith('"'):
@@ -27,12 +33,26 @@ class fstruct:
 		self.ignore=ignore
 		self.write_end=False
 		self.parsed=False
+		self.dependencies=[]
 	def __del__(self):
 		if self.scn:
 			del self.scn
 		del self.lines
 	def __repr__(self):
 		return f"{self.fname} (fstruct)"
+
+	def recenter(self,pth,suffix:str=""):
+		if suffix!="":
+			parts=self.fname.split('.')
+			self.fname=parts[0]+suffix+'.'+parts[1]
+		self.pth=pth
+		self.fullpath=path.join(self.pth,self.fname)
+		for file in self.dependencies:
+			fname=rem(file.val,"'\"").split('/')[-1]
+			if suffix!="":
+				parts=fname.split('.')
+				fname=parts[0]+suffix+'.'+parts[1]
+			file.val='"'+fname+'"'
 
 	def write(self):
 		if self.ignore:
@@ -45,7 +65,6 @@ class fstruct:
 				f.write(".end")
 	def find_dependencies(self):
 		fnames=list_lens(files,'fname')
-		# fnames=[f.fname for f in files]
 		try:
 			self.scn=Scanner(self.fullpath)
 		except:
@@ -86,7 +105,9 @@ class fstruct:
 			elif elem.name.lower() == ".lib" and self.scn.len_of_line()==2:
 				self.lines.append(LibToken(next(self.scn),self.scn))
 			elif elem.name.lower() in ['.inc', '.lib'] and self.scn.len_of_line()==3:
-				self.lines.append(IncludeToken(self.scn))
+				tk=IncludeToken(self.scn)
+				self.dependencies.append(tk)
+				self.lines.append(tk)
 			elif elem.name.lower().startswith("."):
 				self.lines.append(OptionToken(elem,self.scn))
 		for elem in self.lines:
@@ -99,7 +120,6 @@ class fstruct:
 		print("-----------------------")
 		for line in self.lines:
 			print(line)
-			#print(" ".join([str(e) for e in line]))
 	@staticmethod
 	def get_files():
 		return files

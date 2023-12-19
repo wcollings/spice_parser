@@ -69,7 +69,7 @@ class SymTabNode:
 		Recursively search the Symbol Table to identify where this new token should be placed, and place it
 		"""
 		if self.contents==new_tk:
-			return
+			self.contents=new_tk
 		node=(self.left if new_tk.name < self.contents.name else self.right)
 		if node:
 			node.val.add(new_tk,xst,xnn)

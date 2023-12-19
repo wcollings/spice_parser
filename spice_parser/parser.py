@@ -7,7 +7,16 @@ from os import path
 
 
 class Parser:
+	"""
+	The parser module, which is public-facing.
+	"""
 	def __init__(self,f:str):
+		"""
+		Parameters
+		----------
+		f:str
+			The file name of the main SPICE file
+		"""
 		start=fstruct(f)
 		known_files=list_lens(fstruct.get_files(),'fname')
 		if start.fname not in known_files:
@@ -39,4 +48,6 @@ class Parser:
 		raise KeyError(f"{name} not found in symbol table!")
 	def clear_files(self):
 		fstruct.clear_files()
-
+	def set_root(self,pth:str, suffix:str=""):
+		for file in fstruct.get_files():
+			file.recenter(pth,suffix)
