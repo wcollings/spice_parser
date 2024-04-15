@@ -13,12 +13,14 @@ from .ftools import list_lens
 class Tok(Protocol):
 	name:str
 	val:Any
-	def __init__(self,*args,**kwargs) -> None: ...
+	def __init__(self) -> None: ...
 class SymTab(Protocol):
-	def enter(self, tk:Tok) -> None:
-		...
+	def enter(self, tk:Tok) -> None: ...
+	def create_namespace(self,name:str,path=None,root_node:Tok|None=None): ...
+	def exit_namespace(self): ...
 
 class tokenizer(Protocol):
+	curr_xst:int
 	def __next__(self) -> 'SToken': ...
 	def peek(self) -> 'SToken': ...
 	def len_of_line(self) -> int: ...
@@ -34,7 +36,7 @@ class SToken:
 	name:str
 	val:str
 	lineno:LineNumNode
-	def __init__(self,name:str,val:str,ln:LineNumNode=LineNumNode(-1)):
+	def __init__(self,name:str,val:str|None=None,ln:LineNumNode=LineNumNode(-1)):
 		"""
 		Parameters
 		----------
@@ -46,16 +48,17 @@ class SToken:
 			The line number that this token is initially defined on
 		"""
 		self.name=name
-		self.val=val
+		if val is not None:
+			self.val=val
 		self.lineno=ln
 	def __repr__(self):
 		if self.val != "":
 			return f"{self.name}={self.val}"
 		return self.name
-	def __eq__(self, __value: 'SToken|str') -> bool:
-		if isinstance(__value,SToken):
-			return self.name==__value.name
-		return self.name==__value
+	def __eq__(self, _value: 'SToken|str') -> bool:
+		if isinstance(_value,SToken):
+			return self.name==_value.name
+		return self.name==_value
 	def write(self,f):
 		"""
 		Given an open file pointer, write this token to disk. Deprecated!
@@ -67,9 +70,9 @@ class SToken:
 		f.write(" ")
 
 
-#------------------#
-# Base token types #
-#------------------#
+#-------------------------#
+# Nonprinting token types #
+#-------------------------#
 class EOLToken(SToken):
 	"""
 	A token representing the end of a line (or series of lines, if continued) in the current file
@@ -125,6 +128,10 @@ class ElementToken:
 	def write(self,f):
 		legs=' '.join(map(str,self.legs))
 		opts=' '.join(map(str,self.opts))
+		if not hasattr(self,"val"):
+			print(self.name + " has no val!")
+			print(self.legs)
+			print(self.opts)
 		f.write(f"{self.name} {legs} {self.val} {opts}\n")
 	def continue_parse(self,p:tokenizer):
 		while not p.peek().val and not isinstance(p.peek(),EOLToken):
@@ -132,19 +139,19 @@ class ElementToken:
 		try:
 			self.val=self.legs.pop()
 		except:
+			print("Parsing " + self.name, end=":")
 			print("No legs found, so this fails!")
 		while not isinstance(p.peek(),EOLToken):
 			self.opts.append(next(p))
 		next(p)
 	def add_to_st(self,st:SymTab):
-		st.enter(self)
+		st.enter(self) #pyright:ignore
 	def __repr__(self):
 		return ' '.join([self.name] + list_lens(self.legs,'name') + [str(self.val)])
 
-
-
 class SubcktToken:
 	params:list[CmdToken]
+	xst:int
 	def __init__(self,parser:tokenizer):
 		self.name=next(parser).name
 		self.ports=[]
@@ -174,11 +181,13 @@ class SubcktToken:
 		next(p)
 		next(p)
 	def add_to_st(self,st:SymTab):
+		st.create_namespace(self.name,root_node=self) # pyright:ignore
 		for comp in self.comps:
 			comp.add_to_st(st)
 		for param in self.params:
 			param.add_to_st(st)
-		st.enter(self)
+		# st.enter(self) # pyright:ignore
+		st.exit_namespace()
 	def __repr__(self) -> str:
 		return ' '.join([self.name] + list_lens(self.ports,'name'))
 
@@ -197,7 +206,8 @@ class SubcktToken:
 
 class LibToken:
 	subckts:list[SubcktToken]
-	def __init__(self,name:SToken,parser:tokenizer):
+	name:str
+	def __init__(self,name:SToken,parser:tokenizer, st):
 		self.name=name.name
 		self.subckts=[]
 		self.continue_parse(parser)
@@ -213,11 +223,15 @@ class LibToken:
 			self.subckts.append(SubcktToken(p))
 		next(p)
 	def add_to_st(self,st:SymTab):
+		st.create_namespace(self.name,root_node=self) #pyright:ignore
 		for subct in self.subckts:
 			subct.add_to_st(st)
-
+		st.exit_namespace()
+	def __repr__(self):
+		return f"{self.name} (LIB entry)"
 
 class IncludeToken:
+	xst:int
 	def __init__(self,parser:tokenizer):
 		self.val=next(parser).name
 		self.name=next(parser).name
@@ -237,8 +251,9 @@ class OptionToken:
 		self.continue_parse(parser)
 	def write(self,f):
 		f.write(self.name + " ")
-		for line in generate_line_splits(self.opts):
-			f.write(line+'\n')
+		if self.opts:
+			for line in generate_line_splits(self.opts):
+				f.write(line+'\n')
 	
 	def continue_parse(self,p:tokenizer) -> None:
 		while not isinstance(p.peek(),EOLToken):
@@ -253,7 +268,7 @@ def generate_line_splits(inp:list[SToken]):
 	elems=[str(e) for e in inp]
 	output=[]
 	full_line=" ".join(elems)
-	if isinstance(elems[0],CommentToken):
+	if isinstance(inp[0],CommentToken):
 		output.append(elems[0])
 	elif len(full_line) > 90:
 		buff=[elems[0]]

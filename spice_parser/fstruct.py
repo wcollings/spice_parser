@@ -1,6 +1,7 @@
 from .stoken import *
 from .scanner import Scanner
-from .symtab import SymTab
+from .symtab import SymTab2
+from .monad import Counter
 from os import path, stat
 from functools import reduce
 
@@ -9,7 +10,7 @@ def rem(s:str,old:str) -> str:
 	return reduce(rep,[s]+list(old))
 
 files=[]
-st=SymTab()
+st=SymTab2()
 class fstruct:
 	lines:list
 	fname:str
@@ -26,18 +27,21 @@ class fstruct:
 		self.pth,self.fname=path.split(fname)
 		if pth != "":
 			self.pth=path.join(pth,self.pth)
-		self.xid=len(files)+1
-		self.lines=[]
+		if self.pth=="":
+			self.pth="."
 		self.fullpath=path.join(self.pth,self.fname)
+		self.scn=Scanner(self.fullpath)
+		if not ignore:
+			ns=fname.split("/")[-1].split('.')[0]
+			self.ns=st.curr_ns
+			# self.ns=st.create_namespace(ns)
+		self.lines=[]
+		# self.fullpath=path.join(self.pth,self.fname)
 		self.scn=None #pyright:ignore
 		self.ignore=ignore
 		self.write_end=False
 		self.parsed=False
 		self.dependencies=[]
-	def __del__(self):
-		if self.scn:
-			del self.scn
-		del self.lines
 	def __repr__(self):
 		return f"{self.fname} (fstruct)"
 
@@ -79,41 +83,46 @@ class fstruct:
 				f_to_find=fstruct(tk.val,self.pth,ignore=True)
 				if not f_to_find.fname in fnames:
 					files.append(f_to_find)
+		self.scn.reset()
 	def parse(self):
 		if self.parsed:
 			return
 		if self.ignore:
-			delim=" "
-			lines=open(self.fullpath,'r').readlines()
-			if "," in lines[0]:
-				delim=','
-			lines=[line.split(delim) for line in lines]
-			self.delim=delim
+		# 	delim=" "
+		# 	lines=open(self.fullpath,'r').readlines()
+		# 	if "," in lines[0]:
+		# 		delim=','
+		# 	lines=[line.split(delim) for line in lines]
+		# 	self.delim=delim
 			return
-		self.scn=Scanner(self.fullpath)
+		st.curr_ns=self.ns
+		# self.scn=Scanner(self.fullpath)
 		while not (isinstance(elem:=next(self.scn),EOFToken)):
 			opts=[]
-			if isinstance(elem, EOLToken):
-				pass
-			elif elem.name.lower() == ".end":
-				self.write_end=True
-				break
-			elif isinstance(elem, CommentToken):
+			if isinstance(elem, CommentToken):
 				self.lines.append(elem)
-			elif elem.name[0].lower() in "rclgefhvidx":
+				continue
+			elif isinstance(elem, EOLToken):
+				continue
+			# elif elem.name.lower() == ".end":
+				# self.write_end=True
+				# st.exit_namespace()
+			name=elem.name.lower()
+			if name[0] in "rclgefhvidx":
 				self.lines.append(ElementToken(elem,self.scn))
-			elif elem.name.lower() == ".lib" and self.scn.len_of_line()==2:
-				self.lines.append(LibToken(next(self.scn),self.scn))
-			elif elem.name.lower() in ['.inc', '.lib'] and self.scn.len_of_line()==3:
+			elif name == ".lib" and self.scn.len_of_line()==2:
+				self.lines.append(LibToken(next(self.scn),self.scn, st))
+			elif name in ['.inc', '.lib'] and self.scn.len_of_line()==3:
 				tk=IncludeToken(self.scn)
 				self.dependencies.append(tk)
 				self.lines.append(tk)
-			elif elem.name.lower().startswith("."):
+			elif name.startswith("."):
 				self.lines.append(OptionToken(elem,self.scn))
 		for elem in self.lines:
 			if not isinstance(elem,CommentToken):
 				elem.add_to_st(st)
 		self.parsed=True
+		st.exit_namespace()
 	def print(self):
 		print("-----------------------")
 		print(self.fname)

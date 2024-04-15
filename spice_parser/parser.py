@@ -18,11 +18,14 @@ class Parser:
 			The file name of the main SPICE file
 		"""
 		start=fstruct(f)
+		st=start.get_st()
+		name=start.fname.split("/")[-1].split('.')[0]
+		start.ns=st.create_namespace(name)
 		known_files=list_lens(fstruct.get_files(),'fname')
 		if start.fname not in known_files:
 			fstruct.get_files().append(start)
 			start.find_dependencies()
-			print(list_lens(fstruct.get_files(),'fname'))
+			# print(list_lens(fstruct.get_files(),'fname'))
 
 	def get_all_files(self) -> 'list[str]':
 		return fstruct.get_files()
@@ -43,8 +46,11 @@ class Parser:
 		return fstruct.get_st()
 	def get_symbol(self,name:str):
 		sym=fstruct.get_st().search(name)
+		val=sym.val
 		if sym:
-			return {"name":sym.name,"val":sym.val}
+			if isinstance(val,SToken):
+				val=val.name
+			return {"name":sym.name,"val":val}
 		raise KeyError(f"{name} not found in symbol table!")
 	def clear_files(self):
 		fstruct.clear_files()

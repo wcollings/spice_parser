@@ -26,6 +26,14 @@ class Scanner:
 		self.next_is_EOF=False
 		self.curr_line_start=0
 		self.done=False
+
+	def reset(self):
+		self.done=False
+		self.next_is_EOF=False
+		self.next_is_EOL=False
+		self.curr_idx=0
+		self.curr_line_start=0
+		self.in_iter=False
 	def __iter__(self):
 		self.curr_idx=0
 		self.line_no=0
@@ -55,7 +63,8 @@ class Scanner:
 		lnl.update(self.line_no)
 		idx_delta=1
 		res=self.tkBuff[self.curr_idx]
-		if res.startswith("*"):
+		first_line_comment=self.fname.split('.')[-1] in ['sp','in','net'] and self.line_no==0
+		if res.startswith("*") or first_line_comment:
 			idx_delta=find_next_occurance(self.tkBuff[self.curr_idx:],'\n')
 			res=" ".join(self.tkBuff[self.curr_idx:self.curr_idx+idx_delta+1]).strip()
 			self.line_no+=1
