@@ -74,8 +74,9 @@ class SymTabNode:
 		if node is not None:
 			node.add(new_tk)
 		else:
+			node=("left" if new_tk.name < self.contents.name else "right")
 			to_place = SymTabNode(new_tk)
-			if node==self.left:
+			if node=="left":
 				self.left=to_place
 			else:
 				self.right=to_place
