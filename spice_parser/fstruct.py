@@ -1,6 +1,6 @@
 from .stoken import *
 from .scanner import Scanner
-from .symtab import SymTab2
+from .symtab import SymTab
 from .monad import Counter
 from os import path, stat
 from functools import reduce
@@ -10,7 +10,7 @@ def rem(s:str,old:str) -> str:
 	return reduce(rep,[s]+list(old))
 
 files=[]
-st=SymTab2()
+st=SymTab()
 class fstruct:
 	lines:list
 	fname:str
