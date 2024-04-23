@@ -45,13 +45,7 @@ class Parser:
 	def get_symtab(self):
 		return fstruct.get_st()
 	def get_symbol(self,name:str):
-		sym=fstruct.get_st().search(name)
-		val=sym.val
-		if sym:
-			if isinstance(val,SToken):
-				val=val.name
-			return {"name":sym.name,"val":val}
-		raise KeyError(f"{name} not found in symbol table!")
+		return fstruct.get_st().search(name)
 	def clear_files(self):
 		fstruct.clear_files()
 	def set_root(self,pth:str, suffix:str=""):
