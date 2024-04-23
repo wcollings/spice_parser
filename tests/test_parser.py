@@ -21,7 +21,6 @@ class TestParser(TestCase):
 		parser = Parser("epc2022_dpt.sp")
 		parser.parse()
 		parser.write_all()
-		# print(parser.get_all_files())
 		assert len(parser.get_all_files())==3
 
 	def test_get_symbol(self):

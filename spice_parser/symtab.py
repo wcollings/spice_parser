@@ -1,8 +1,16 @@
 from typing import Sequence
 from .linenumlist import LineNumList, LineNumNode
-from fp.monad import Maybe, Empty
+from fp.monad import Default, Maybe, Empty
 from fp.lists import head,tail
 from .stoken import SToken, EOFToken, EOLToken
+class Counter:
+	curr=0
+	def __init__(self):
+		self.curr=-1
+	def __call__(self) -> int:
+		self.curr+=1
+		return self.curr
+counter=Counter()
 
 class SymTabNode:
 	"""
@@ -10,6 +18,7 @@ class SymTabNode:
 	"""
 	left:'SymTabNode|None'
 	right:'SymTabNode|None'
+	parent:'SymTabNode|None'
 	contents:SToken
 	""" The SToken that this symbol stores."""
 	# xSymTab:int
@@ -22,14 +31,11 @@ class SymTabNode:
 		----------
 		cnt:SToken
 			The 'contents' of this node - the token that this symbol uniquely stores.
-		xn:int
-			The symbol ID number for this node
 		"""
 		self.contents=cnt
 		self.left= None
 		self.right=None
-		# self.xSymTab=xst
-		# self.xNode=xn
+		self.parent=None
 
 	def __del__(self):
 		del self.left
@@ -38,31 +44,15 @@ class SymTabNode:
 
 	def __repr__(self) -> str:
 		strs=[]
+		bf=self.bf()
+		# bf=0
+		return f"{self.contents} ({bf=})"
 		if self.left:
 			strs.append(str(self.left))
 		strs.append(f"{self.contents}")
 		if self.right:
 			strs.append(str(self.right))
 		return "\n".join(strs)
-
-	def get_parent(self,tk:SToken) -> 'SymTabNode|None':
-		"""
-		Given some token, search all nodes below this one and find if there exists a node which is the parent of this token.
-
-		Parameters
-		----------
-		tk:SToken
-			The token to try to identify in the symbol table
-
-		Returns
-		-------
-		Maybe[SymTabNode]
-			the parent, if found, otherwise an empty monad
-		"""
-		node=(self.left if tk.name < self.contents.name else self.right)
-		if node is not None:
-			return node.get_parent(tk)
-		return node
 
 	def add(self,new_tk:SToken):
 		"""
@@ -76,10 +66,68 @@ class SymTabNode:
 		else:
 			node=("left" if new_tk.name < self.contents.name else "right")
 			to_place = SymTabNode(new_tk)
+			to_place.parent=self
 			if node=="left":
 				self.left=to_place
 			else:
 				self.right=to_place
+		bf=self.bf()
+		if bf<-1:
+			if self.left.bf() > 0: #pyright:ignore
+				self.left.lrot() #pyright:ignore
+			self.rrot()
+				
+		elif bf>1:
+			if self.right.bf()<0: #pyright:ignore
+				self.right.rrot() #pyright:ignore
+			self.lrot()
+		pass
+
+	def lrot(self):
+		sr=self.right
+		if sr is None:
+			return
+		self.right=sr.left
+		if sr.left is not None:
+			sr.left.parent=self
+		if self.parent is not None:
+			if self.parent.right==self:
+				self.parent.right=sr
+			else:
+				self.parent.left=sr
+		sr.left=self
+		# if sr.right is not None:
+			# sr.right.parent=self
+		sr.parent=self.parent
+		self.parent=sr
+
+	def rrot(self):
+		sl=self.left
+		if sl is None:
+			return
+		self.left=sl.right
+		if sl.right is not None:
+			sl.right.parent=self
+		if self.parent is not None:
+			if self.parent.left==self:
+				self.parent.left=sl
+			else:
+				self.parent.right=sl
+		sl.right=self
+		sl.parent=self.parent
+		self.parent=sl
+
+	def bf(self):
+		bf=Default(0,self.right).bind(SymTabNode.height).unwrap() - \
+			Default(0,self.left ).bind(SymTabNode.height).unwrap()
+		return bf
+	#def __len__(self):
+		#l=1
+		#if self.left is not None:
+			#l+=len(self.left)
+		#if self.right is not None:
+			#l+=len(self.right)
+		#return l
 	
 	def edit_value(self,name:str,val:str):
 		"""
@@ -135,72 +183,57 @@ class SymTabNode:
 		elif tk.name > self.contents.name and self.right:
 			return self.right.__contains__(tk)
 		return False
+	def height(self,frames=0) -> int:
+		lh=0
+		lh=Default(0,self.left).bind(SymTabNode.height)
+		rh=Default(0,self.right).bind(SymTabNode.height)
+		if frames > 30:
+			pass
+		return max(lh.unwrap(),rh.unwrap()) + 1 #pyright:ignore
 
-class SymTab:
-	"""
-	A wrapper class for the Symbol Table. Provides the true interface between the binary tree and the outside.
-	"""
-	roots_map:dict
-	roots:list
-	lnl:LineNumList
-	num_nodes:int
-	def __init__(self) -> None:
-		self.roots_map=dict()
-		self.roots=[]
-		self.num_nodes=0
-		self.lnl=LineNumList()
-	def __del__(self):
-		del self.roots
-	def search(self,name:str) -> SToken:
-		"""
-		Search for and return a token stored in the symbol table, if it exists.
-		"""
-		for root in self.roots:
-			val=root.get_tok(name)
-			if val:
-				return val.val
-		raise KeyError(f"{name} is not found in any symbol table!")
-	def create_new_st(self,ns:str) -> int:
-		next_val=len(self.roots_map)
-		self.roots_map[ns]=next_val
-		return next_val
-
-	def enter(self,tk:SToken,xst:int)-> None:
-		"""
-		Create a symbol to store a given token, and add to the symbol table
-
-		Parameters
-		----------
-		tk:SToken
-			The token to store
-		xst:int
-			The ID of the symbol table to enter into
-		"""
-		if xst >len(self.roots):
-			raise KeyError(f"The provided symbol table ID is invalid! {xst=}")
-		if xst==len(self.roots):
-			self.roots.append(tk)
+	# NOTE: For debugging
+	def lent(self,seed=0):
+		l=1
+		if seed > 10:
+			pass
+		if self.left is not None:
+			l+=self.left.lent(seed+1)
+		if self.right is not None:
+			l+=self.right.lent(seed+1)
+		return l
+	def add_count(self,d:dict,rd=0) -> dict:
+		if rd > 20:
+			pass
+		if self in d:
+			d[self]+=1
 		else:
-			self.roots[xst].add(tk)
-		self.roots[xst].add(tk)
-	def edit(self,name:str,val:str,xst:int=-1):
-		"""
-		Find a given symbol in the symbol table and update it. If you know the symbol table ID to search, that goes in xst, otherwise you can prefix val with the namespace it belongs to, and a '.' separator, and we'll find it ourselves
+			d[self]=1
+		if self.left:
+			d=self.left.add_count(d,rd+1)
+		if self.right:
+			d=self.right.add_count(d,rd+1)
+		return d
+	def print_to_graph(self):
+		left=Maybe(self.left)
+		if left:
+			print(f"{self.contents} --> {left.contents}")
+		right=Maybe(self.right)
+		if right:
+			print(f"{self.contents} --> {right.contents}")
+		if self.parent:
+			print(f"{self.contents} -- p --> {self.parent.contents}")
+		left.bind(SymTabNode.print_to_graph)
+		right.bind(SymTabNode.print_to_graph)
 
-		Parameters
-		----------
-		name:str
-			The name associated with the symbol you wish to update
-		val:str
-			The value you wish to store intead of the current value
-		"""
-		if xst==-1:
-			xst=self.roots_map[val.split('.')[0]]
-		self.roots[xst].edit_value(name,val)
-	# def __repr__(self):
-		# return str(self.root)
 
+def get_stn_root(stn:SymTabNode):
+	while stn.parent is not None:
+		stn=stn.parent
+	return stn
 class SymTabNS:
+	"""
+	Holds and represents the namespace
+	"""
 	parent:'SymTabNS'
 	children:list['SymTabNS']
 	root:SymTabNode
@@ -221,8 +254,21 @@ class SymTabNS:
 	def add(self,tk:SToken):
 		if not hasattr(self,'root'):
 			self.root=SymTabNode(tk)
+			old_len=0
 		else:
+			old_len=self.root.lent()
 			self.root.add(tk)
+		self.root=get_stn_root(self.root)
+		count_of_nodes=self.root.add_count(dict())
+		if not all(map(lambda x:x==1, count_of_nodes.values())):
+			print(f"Problem adding {tk.name}:")
+			print("Not all tokens are unique! Repeated entries:")
+			for k,v in count_of_nodes.items():
+				if v != 1:
+					print(f"\t {k} ({v})")
+			return -1
+		assert self.root.lent()==old_len+1,"We lost a node somewhere!"
+
 	def __eq__(self,rhs):
 		if isinstance(rhs,str):
 			return self.name==rhs
@@ -249,7 +295,7 @@ def trav_ns(ns_root:SymTabNS,pth:Sequence[str]):
 		return ns_root
 	return trav_ns(ns_root[head(pth)],tail(pth))
 
-class SymTab2:
+class SymTab:
 	roots:SymTabNS|None
 	curr_ns:SymTabNS
 	def __init__(self) -> None:
@@ -285,16 +331,17 @@ class SymTab2:
 			return
 		ns_parent=trav_ns(self.roots,ns)
 		ns_parent.root.edit_value(name,val)
-	def search(self,name:str,ns:list|None=None):
+	def search(self,name:str,ns:list|None=None) -> str:
 		if ns is None:
 			ns=name.split('.')[:-1]
 			name=name.split('.')[-1]
 		if self.roots is None:
-			return
+			raise MemoryError(f"You didn't initialize this parse tree yet!")
 		ns_parent=trav_ns(self.roots,ns)
-		val=ns_parent.root.get_tok(name)
-		if val:
-			return val.val
+		result=ns_parent.root.get_tok(name)
+		if result:
+			return result.unwrap().val
+		raise KeyError(f"No Token {name} exists in namespace {ns}!")
 	def print(self):
 		if self.roots is not None:
 			self.roots.print()
